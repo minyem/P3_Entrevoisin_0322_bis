@@ -69,7 +69,7 @@ public class ViewNeighbourFragment extends Fragment {
         v.findViewById(R.id.ReturnButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               getActivity().getSupportFragmentManager().popBackStack();
+              getActivity().getSupportFragmentManager().popBackStack();
             }
         });
 
@@ -79,7 +79,6 @@ public class ViewNeighbourFragment extends Fragment {
 
                 PreferencesManager prefs = PreferencesManager.getInstance();
 
-                if (isfavorite == false)
                 {
                     prefs.setIntValue("id", id);
                     prefs.setStringValue("userName", userName);
@@ -88,8 +87,8 @@ public class ViewNeighbourFragment extends Fragment {
                     prefs.setStringValue("numtel", numtel);
                     prefs.setStringValue("addmail", addmail);
                     prefs.setStringValue("aproposdemoi", aproposdemoi);
-
-                    displayFavoriteList.apply();
+                    prefs.setBooleanValue("isfavorite", true);
+                   displayFavoriteList.apply();
 
                     getActivity().getSupportFragmentManager().popBackStack();
                 }

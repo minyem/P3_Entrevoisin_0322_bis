@@ -76,7 +76,8 @@ public class NeighbourFavorisFragment extends Fragment {
                 );
         if(prefs.getStringValue("userName") != null && !prefs.getStringValue("userName").isEmpty())
         {
-            mNeighbours.add(neighbour);
+           if (!mNeighbours.contains(neighbour))
+           {mNeighbours.add(neighbour);}
             prefs.clear();
         }
 
