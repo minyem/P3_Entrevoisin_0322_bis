@@ -15,6 +15,8 @@ import com.openclassrooms.entrevoisins.R;
 import com.openclassrooms.entrevoisins.di.DI;
 import com.openclassrooms.entrevoisins.events.DeleteNeighbourEvent;
 import com.openclassrooms.entrevoisins.model.Neighbour;
+import com.openclassrooms.entrevoisins.service.GetIdFavoriteNeighbour;
+import com.openclassrooms.entrevoisins.service.GetIdNeighbour;
 import com.openclassrooms.entrevoisins.service.NeighbourApiService;
 
 import org.greenrobot.eventbus.EventBus;
@@ -22,8 +24,10 @@ import org.greenrobot.eventbus.Subscribe;
 
 import java.util.List;
 
+import io.realm.Realm;
 
-public class NeighbourFragment extends Fragment {
+
+public class NeighbourFragment extends Fragment implements  GetIdFavoriteNeighbour  {
 
     private NeighbourApiService mApiService;
     private List<Neighbour> mNeighbours;
@@ -59,15 +63,18 @@ public class NeighbourFragment extends Fragment {
     /**
      * Init the List of neighbours
      */
-    private void initList() {
-        mNeighbours = mApiService.getNeighbours();
-        mRecyclerView.setAdapter(new MyNeighbourRecyclerViewAdapter(mNeighbours));
+    public void initList() {
+
+        Realm r = Realm.getDefaultInstance();
+        mNeighbours =  r.where(Neighbour.class).findAll();
+        mRecyclerView.setAdapter(new MyNeighbourRecyclerViewAdapter(mNeighbours,this));
     }
 
     @Override
     public void onResume() {
         super.onResume();
         initList();
+
     }
 
     @Override
@@ -90,5 +97,13 @@ public class NeighbourFragment extends Fragment {
     public void onDeleteNeighbour(DeleteNeighbourEvent event) {
         mApiService.deleteNeighbour(event.neighbour);
         initList();
+    }
+
+    @Override
+    public void valueFavorite(String name) {
+
+        NeighbourFavorisFragment neighbourFavorisFragment = (NeighbourFavorisFragment)getActivity(). getSupportFragmentManager()
+                .getFragments().get(1);
+        neighbourFavorisFragment.initList();
     }
 }

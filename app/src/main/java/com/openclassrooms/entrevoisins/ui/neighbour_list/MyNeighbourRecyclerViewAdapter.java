@@ -1,5 +1,6 @@
 package com.openclassrooms.entrevoisins.ui.neighbour_list;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,11 +13,14 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.openclassrooms.entrevoisins.R;
+import com.openclassrooms.entrevoisins.di.DI;
 import com.openclassrooms.entrevoisins.events.DeleteNeighbourEvent;
 import com.openclassrooms.entrevoisins.model.Neighbour;
+import com.openclassrooms.entrevoisins.service.GetIdFavoriteNeighbour;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -24,13 +28,16 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.realm.Realm;
 
 public class MyNeighbourRecyclerViewAdapter extends RecyclerView.Adapter<MyNeighbourRecyclerViewAdapter.ViewHolder> {
 
     private final List<Neighbour> mNeighbours;
     private   View view;
-    public MyNeighbourRecyclerViewAdapter(List<Neighbour> items) {
+    private GetIdFavoriteNeighbour getIdFavoriteNeighbour;
+    public MyNeighbourRecyclerViewAdapter(List<Neighbour> items, GetIdFavoriteNeighbour getIdFavoriteNeighbour ) {
         mNeighbours = items;
+        this. getIdFavoriteNeighbour = getIdFavoriteNeighbour;
     }
 
     @Override
@@ -42,9 +49,12 @@ public class MyNeighbourRecyclerViewAdapter extends RecyclerView.Adapter<MyNeigh
     }
 
     @Override
-    public void onBindViewHolder(final ViewHolder holder,  int position) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
+
         Neighbour neighbour = mNeighbours.get(position);
         holder.mNeighbourName.setText(neighbour.getName());
+
+
         Glide.with(holder.mNeighbourAvatar.getContext())
                 .load(neighbour.getAvatarUrl())
                 .apply(RequestOptions.circleCropTransform())
@@ -53,23 +63,21 @@ public class MyNeighbourRecyclerViewAdapter extends RecyclerView.Adapter<MyNeigh
         holder.mDeleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mNeighbours.remove(neighbour);
-                notifyDataSetChanged();
-             }
+                Realm r = Realm.getDefaultInstance();
+                r.beginTransaction();
+                neighbour.deleteFromRealm();
+                r.commitTransaction();
+
+                getIdFavoriteNeighbour.valueFavorite("item is deleted");
+
+                notifyItemRemoved(holder.getAbsoluteAdapterPosition());
+            }
         });
        holder.mainContent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Bundle i = new Bundle();
                 i.putInt("id", (int) neighbour.getId());
-                i.putString("username", neighbour.getName());
-                i.putString("photo", neighbour.getAvatarUrl());
-                i.putString("addresse", neighbour.getAddress());
-                i.putString("phonenumber", neighbour.getPhoneNumber());
-                i.putString("addressemail", neighbour.getMailAddresse());
-                i.putString("aboutme", neighbour.getAboutMe());
-                i.putBoolean("isFavorite", neighbour.getFavorite());
-
 
                 ViewNeighbourFragment viewNeighbourFragment =  new ViewNeighbourFragment();
                 viewNeighbourFragment.setArguments(i);

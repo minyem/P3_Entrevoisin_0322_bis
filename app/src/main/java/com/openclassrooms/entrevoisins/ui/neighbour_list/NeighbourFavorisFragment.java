@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.collection.ArraySet;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,20 +19,23 @@ import com.openclassrooms.entrevoisins.R;
 import com.openclassrooms.entrevoisins.di.DI;
 import com.openclassrooms.entrevoisins.events.DeleteNeighbourEvent;
 import com.openclassrooms.entrevoisins.model.Neighbour;
+import com.openclassrooms.entrevoisins.service.GetIdNeighbour;
 import com.openclassrooms.entrevoisins.service.NeighbourApiService;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import io.realm.Realm;
 
-public class NeighbourFavorisFragment extends Fragment {
+
+public class NeighbourFavorisFragment extends Fragment implements GetIdNeighbour   {
 
     private NeighbourApiService mApiService;
-    private List<Neighbour> mNeighbours;
     private RecyclerView mRecyclerView;
-
+    private List<Neighbour> favoriteNeighbours ;
 
     /**
      * Create and return a new instance
@@ -63,37 +67,23 @@ public class NeighbourFavorisFragment extends Fragment {
      * Init the List of neighbours
      */
     public void initList() {
-        mNeighbours = mApiService.getFavorisNeighbours();
-        PreferencesManager prefs = PreferencesManager.getInstance();
-        Neighbour neighbour = new Neighbour(prefs.getIntValue("id"),
-                prefs.getStringValue("userName"),
-                prefs.getStringValue("photo"),
-                prefs.getStringValue("address"),
-                prefs.getStringValue("numtel"),
-                prefs.getStringValue("addmail"),
-                prefs.getStringValue("aproposdemoi"),
-                true
-                );
-        if(prefs.getStringValue("userName") != null && !prefs.getStringValue("userName").isEmpty())
-        {
-           if (!mNeighbours.contains(neighbour))
-           {mNeighbours.add(neighbour);}
-            prefs.clear();
-        }
 
-        mRecyclerView.setAdapter(new MyNeighbourRecyclerViewAdapter(mNeighbours));
+        Realm r = Realm.getDefaultInstance();
+        favoriteNeighbours =  r.where(Neighbour.class).equalTo("isFavorite", true).findAll();
+
+        mRecyclerView.setAdapter(new MyFavoriteNeighbourRecyclerViewAdapter(favoriteNeighbours,   this));
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
+        initList();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        initList();
+
     }
 
     @Override
@@ -116,5 +106,15 @@ public class NeighbourFavorisFragment extends Fragment {
     public void onDeleteNeighbour(DeleteNeighbourEvent event) {
         mApiService.deleteNeighbour(event.neighbour);
         initList();
+    }
+
+
+    @Override
+    public void value(String name) {
+
+        NeighbourFragment neighbourFragment = (NeighbourFragment) getActivity(). getSupportFragmentManager()
+                .getFragments().get(0);
+
+        neighbourFragment.initList();
     }
 }
